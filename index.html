@@ -177,13 +177,22 @@ document.getElementById("certificateText").innerHTML=
 
 function sendScore(){
 fetch(scriptURL,{
-method:"POST",
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({name:player,score:score})
+  method:"POST",
+  headers:{
+    "Content-Type":"application/json"
+  },
+  body:JSON.stringify({
+    name:player,
+    score:score
+  })
 })
-.then(res=>alert("Đã gửi kết quả thành công!"))
-.catch(err=>alert("Lỗi gửi điểm!"));
-}
+.then(response => response.json())
+.then(data => {
+  alert("Đã gửi kết quả thành công!");
+})
+.catch(error => {
+  alert("Lỗi gửi điểm!");
+});
 
 function downloadCertificate(){
 html2canvas(document.getElementById("certificateArea")).then(canvas=>{
