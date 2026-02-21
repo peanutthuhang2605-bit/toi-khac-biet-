@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tôi Khác Biệt</title>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<style>
+body{
+    margin:0;
+    font-family:'Segoe UI',sans-serif;
+    background:linear-gradient(180deg,#ffd6ec,#cceeff);
+    text-align:center;
+}
+
+.screen{display:none;padding:20px;}
+.active{display:block;}
+
+h1{color:#ff3399;}
+
+button{
+    width:90%;
+    max-width:350px;
+    padding:14px;
+    margin:10px auto;
+    font-size:16px;
+    border:none;
+    border-radius:30px;
+    background:#4da6ff;
+    color:white;
+    font-weight:bold;
+    display:block;
+}
+
+.progress-container{
+    width:90%;
+    height:20px;
+    background:#ddd;
+    border-radius:20px;
+    margin:15px auto;
+    overflow:hidden;
+}
+
+.progress{
+    height:100%;
+    width:0%;
+    background:#4caf50;
+    transition:0.5s;
+}
+
+input{
+    padding:10px;
+    font-size:16px;
+    width:85%;
+    border-radius:15px;
+    border:1px solid #ccc;
+}
+
+.certificate-box{
+    background:white;
+    padding:20px;
+    border-radius:20px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- MÀN 1 -->
+<div id="screen1" class="screen active">
+<h1>🎮 Tôi Khác Biệt</h1>
+<p>Nhập tên của em:</p>
+<input type="text" id="playerName" placeholder="Ví dụ: Minh Anh">
+<button onclick="startGame()">Bắt đầu</button>
+</div>
+
+<!-- MÀN 2 -->
+<div id="screen2" class="screen">
+<h3 id="question"></h3>
+<div id="answers"></div>
+
+<div class="progress-container">
+<div class="progress" id="progress"></div>
+</div>
+
+<p>Điểm Tôn Trọng: <span id="score">0</span></p>
+</div>
+
+<!-- MÀN 3 -->
+<div id="screen3" class="screen">
+<div class="certificate-box" id="certificateArea">
+<h1>🏆 CHỨNG NHẬN</h1>
+<p id="certificateText"></p>
+</div>
+
+<button onclick="sendScore()">📤 Gửi kết quả cho cô</button>
+<button onclick="downloadCertificate()">📸 Tải ảnh chứng nhận</button>
+<button onclick="restart()">🔄 Chơi lại</button>
+</div>
+
+<script>
+const scriptURL = "https://script.google.com/macros/s/AKfycbyHgwZ4Zp6qt7x0b3_u6vDffiTWFcY30V4j6hAolK7zDrrOTwu855hJXA2K-9S4_DVw/exec";
+
+let score=0;
+let current=0;
+let player="";
+
+const questions=[
+{
+question:"Bạn thấy một bạn mặc khác mình. Bạn sẽ:",
+answers:[
+{text:"Cười chê",score:0},
+{text:"Khen và tôn trọng bạn",score:10},
+{text:"Không quan tâm",score:5}
+]
+},
+{
+question:"Một bạn có sở thích khác số đông. Bạn sẽ:",
+answers:[
+{text:"Chọc ghẹo",score:0},
+{text:"Lắng nghe bạn",score:10},
+{text:"Tránh xa",score:5}
+]
+},
+{
+question:"Nhóm bạn không cho một bạn tham gia vì khác biệt. Bạn sẽ:",
+answers:[
+{text:"Bênh vực bạn",score:10},
+{text:"Im lặng",score:5},
+{text:"Đồng ý loại bạn",score:0}
+]
+}
+];
+
+function startGame(){
+player=document.getElementById("playerName").value;
+if(player===""){alert("Vui lòng nhập tên!");return;}
+switchScreen(2);
+showQuestion();
+}
+
+function showQuestion(){
+if(current>=questions.length){endGame();return;}
+let q=questions[current];
+document.getElementById("question").innerText=q.question;
+let div=document.getElementById("answers");
+div.innerHTML="";
+q.answers.forEach(a=>{
+let btn=document.createElement("button");
+btn.innerText=a.text;
+btn.onclick=function(){
+score+=a.score;
+current++;
+updateProgress();
+showQuestion();
+};
+div.appendChild(btn);
+});
+}
+
+function updateProgress(){
+let percent=(score/30)*100;
+document.getElementById("progress").style.width=percent+"%";
+document.getElementById("score").innerText=score;
+}
+
+function endGame(){
+switchScreen(3);
+let result="";
+if(score>=25){result="🌟 Đại sứ Tôn Trọng";}
+else if(score>=15){result="💛 Người bạn Thấu hiểu";}
+else{result="🌱 Đang học cách tôn trọng";}
+document.getElementById("certificateText").innerHTML=
+"<b>"+player+"</b><br>"+result+"<br>Điểm: "+score;
+}
+
+function sendScore(){
+fetch(scriptURL,{
+method:"POST",
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({name:player,score:score})
+})
+.then(res=>alert("Đã gửi kết quả thành công!"))
+.catch(err=>alert("Lỗi gửi điểm!"));
+}
+
+function downloadCertificate(){
+html2canvas(document.getElementById("certificateArea")).then(canvas=>{
+let link=document.createElement("a");
+link.download="chung-nhan.png";
+link.href=canvas.toDataURL();
+link.click();
+});
+}
+
+function switchScreen(n){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById("screen"+n).classList.add("active");
+}
+
+function restart(){
+score=0;
+current=0;
+document.getElementById("progress").style.width="0%";
+document.getElementById("score").innerText=0;
+switchScreen(1);
+}
+</script>
+
+</body>
+</html>
